@@ -1,0 +1,14 @@
+# data & large/regenerable outputs
+data/
+outputs/
+*.mp4
+*.mp4.part
+
+# python
+.venv/
+__pycache__/
+*.pyc
+
+# os
+Thumbs.db
+.DS_Store

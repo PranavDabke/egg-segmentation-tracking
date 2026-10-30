@@ -1,0 +1,28 @@
+# ---- Core (all tasks) ----
+numpy
+opencv-python          # install ONLY this one OpenCV (see README: avoid opencv-python-headless clash)
+pillow
+scipy
+scikit-image
+scikit-learn>=1.4      # >=1.4 required for NumPy 2.x (older versions crash on import)
+pandas
+matplotlib
+imagehash
+tqdm
+
+# ---- Task 1: Grounded-SAM (pseudo ground truth) ----
+# NOTE: install a CUDA build of torch/torchvision matching your driver FIRST, e.g.:
+#   pip install torch torchvision --index-url https://download.pytorch.org/whl/cu121
+# (or the CPU build: --index-url https://download.pytorch.org/whl/cpu)
+transformers>=4.41
+accelerate
+safetensors
+
+# ---- Task 1 extra: model comparison (FastSAM) ----
+ultralytics
+
+# ---- Task 3 extra: Excel export ----
+openpyxl
+
+# ---- Task 4: video download ----
+yt-dlp
