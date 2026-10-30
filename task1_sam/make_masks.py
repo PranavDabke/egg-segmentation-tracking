@@ -1,6 +1,9 @@
 """
 Task 1 - Segmentation using a pretrained model (Grounded-SAM).
 
+A "mask" here is a black-and-white image marking which pixels are egg
+(white = egg, black = background) - one per egg in the picture.
+
 Pipeline per image:
   1. Grounding DINO (open-vocabulary detector) with the text prompt "egg"
      -> bounding box(es) around every egg.
@@ -83,7 +86,10 @@ def main():
         used = 0
         if len(boxes):
             masks = sam_masks(image, boxes, sproc, smodel, device)
-            # sort by area so bigger eggs get lower ids (stable, cosmetic)
+            # SAM can bleed past the egg (e.g. water/reflection in a bowl).
+            # Constrain every mask to its detection box, keep the largest blob,
+            # fill holes -> clean pseudo-GT.
+            masks = [refine_mask(m, b, (H, W)) for m, b in zip(masks, boxes)]
             order = np.argsort([-(m.sum()) for m in masks])
             for m in (masks[o] for o in order):
                 if m.sum() < 80:            # drop tiny spurious masks
@@ -128,6 +134,25 @@ def sam_masks(image, boxes, proc, model, device):
     best = [masks[j, scores[j].argmax()].numpy().astype(bool)
             for j in range(masks.shape[0])]
     return best
+
+def refine_mask(m, box, shape, pad=0.06):
+    """Clip mask to its (slightly padded) detection box, keep largest connected
+    component, fill holes. Removes SAM bleed into water / background."""
+    H, W = shape
+    x0, y0, x1, y1 = box
+    bw, bh = x1 - x0, y1 - y0
+    X0, Y0 = max(0, int(x0 - pad * bw)), max(0, int(y0 - pad * bh))
+    X1, Y1 = min(W, int(x1 + pad * bw)), min(H, int(y1 + pad * bh))
+    clip = np.zeros_like(m)
+    clip[Y0:Y1, X0:X1] = True
+    m = m & clip
+    if m.sum() == 0:
+        return m
+    lab, n = cc_label(m)
+    if n > 1:
+        sizes = [(lab == i).sum() for i in range(1, n + 1)]
+        m = lab == (1 + int(np.argmax(sizes)))
+    return binary_fill_holes(m)
 
 def save_overlay(bgr, inst, path):
     out = bgr.copy()

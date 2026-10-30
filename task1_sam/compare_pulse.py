@@ -1,7 +1,15 @@
 """
-Comparison pulse: per-image mask agreement of SAM-huge and FastSAM vs SAM-base
-(our ground-truth model), across N images. Shows where the models agree and
-where they diverge. Saves a clean white pulse graph + a CSV.
+Task 1 - per-image model agreement ("pulse" chart).
+
+"Pulse" is just the name of the chart style: a line that rises and dips
+across the images, like a heartbeat monitor. For each of N images it measures
+how closely SAM-huge and FastSAM agree with SAM-base (the model used to make
+the ground-truth masks), scored by mask IoU. A high line means the models
+produce almost the same egg mask on that image; a dip marks a harder egg where
+they disagree. The point of the chart is to show that SAM-base is a safe
+ground-truth choice, since the SAM-huge line stays near the top throughout.
+
+Outputs: a white-background line chart (per-image agreement) + a CSV.
 
 Run:  python task1_sam/compare_pulse.py --n 12
       (add --no-huge to skip the slow CPU SAM-huge and run in ~15s)
